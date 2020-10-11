@@ -1,0 +1,74 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratos</title>
+  <link rel="stylesheet" href="popup.css">
+  <script defer src="popup.dart.js"></script>
+</head>
+
+<body>
+  <div dz-controller="app">
+    <div></div>
+  </div>
+
+  <template dz-template="login">
+    <div id="login">
+      <h1>Welcome to Stratos!</h1>
+      <button dz-actions="click:login:login">Sign in to Google</button>
+    </div>
+  </template>
+
+  <template dz-template="progress">
+    <div id="progress">
+      <div dz-controller="tabs" data-tabs-active-class="active" id="tabs">
+        <span id="unsynced" class="tab" dz-actions="attach:tabs;click:tabs">Unsynced</span>
+        <span id="synced" class="tab" dz-actions="attach:tabs;click:tabs">Synced</span>
+      </div>
+
+      <div id="view">
+        <div class="progress-empty" id="all-empty">
+          <span>
+            There's nothing here. Try navigating to
+            <a href="#" dz-actions="click:progress:goToCaptures">the captures page</a> to let Stratos
+            start loading your captures.
+          </span>
+        </div>
+        <div class="progress-empty" id="unsynced-empty">
+          <span>All your captures are synced! Go play some more games.</span></div>
+        <div class="progress-empty" id="synced-empty">
+          <span>Looks like you should go upload some captures!</span>
+        </div>
+      </div>
+
+      <div id="uploading">
+        <div class="uploading-header">Currently uploading</div>
+        <div id="uploading-row">
+          <div class="progress-empty" id="uploading-empty">
+            <span>
+              Nothing is being uploaded right now; go to
+              <a href="#" dz-actions="click:progress:goToCaptures">the captures page</a> to upload some.
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template dz-template="row">
+    <div class="progress-row">
+      <img dz-content="src:row:thumbnail" loading="lazy" class="progress-row-img">
+      <div class="progress-row-info">
+        <span dz-content="row:game" class="progress-row-game"></span>
+        <span dz-content="row:date" class="progress-row-date"></span>
+        <div dz-content="row:percent" class="progress-row-percent"></div>
+      </div>
+    </div>
+  </template>
+</body>

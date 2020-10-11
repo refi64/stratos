@@ -1,0 +1,51 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+//!merge:manifest.local.json
+{
+  "name": "Stratos",
+  "version": "0.1",
+  "description": "Upload your Stadia captures to Google Drive",
+  "manifest_version": 2,
+  "background": {
+    "scripts": ["background.dart.js"],
+    "persistent": true
+  },
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "identity",
+    "storage",
+    "tabs",
+    "https://lh3.google.com/",
+    "https://lh3.googleusercontent.com/",
+    "https://video-downloads.googleusercontent.com/"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://stadia.google.com/*"
+      ],
+      "js": [
+        "content_script.dart.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "icons": {
+    "16": "stratos16.png",
+    "48": "stratos48.png",
+    "128": "stratos128.png"
+  },
+  "web_accessible_resources": [
+    "*.dart",
+    "*.dart.js"
+  ],
+  "oauth2": {
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  }
+}

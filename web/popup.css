@@ -1,0 +1,175 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+ @import url(https://fonts.googleapis.com/css?family=Roboto);
+
+body {
+  color: white;
+  width: 512px;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  background-color: #202124;
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: normal;
+}
+
+h1 {
+  font-size: 32px;
+}
+
+button {
+  color: white;
+  background-color: #9f3a3a;
+  border: none;
+  text-transform: uppercase;
+  padding: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: fit-content;
+  height: fit-content;
+}
+
+button:hover {
+  background-color: #b85d5d;
+}
+
+button:active {
+  background-color: #c47070;
+}
+
+[dz-controller=app] {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+#progress {
+  height: 100%;
+  width: 100%;
+}
+
+#tabs {
+  display: flex;
+}
+
+.tab {
+  font-size: 20px;
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid white;
+  cursor: pointer;
+  position: relative;
+}
+
+.tab.active {
+  color: #F14127;
+  border-color: #F14127;
+}
+
+.tab:hover::after {
+  content: "";
+  background-color: #ffffff0f;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#view {
+  height: 360px;
+  overflow-y: auto;
+}
+
+a, a:visited {
+  color: #5291ef;
+}
+
+.progress-empty {
+  font-size: 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.progress-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  margin: 16px;
+  border-radius: 0.5rem;
+  background-color: #ffffff0f;
+}
+
+.progress-row-img {
+  border-radius: 0.5rem;
+  height: 90px;
+  width: 160px;
+}
+
+.progress-row-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.progress-row-game {
+  font-size: 18px;
+  padding-bottom: 4px;
+}
+
+.progress-row-date {
+  font-style: italic;
+}
+
+.progress-row-percent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 160px;
+  height: 90px;
+  background-color: #0000009c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploading-header {
+  font-size: 20px;
+  margin: 16px;
+  text-align: center;
+}
+
+#uploading-row {
+  /* The empty space that would be taken up by a row + its margin */
+  height: 112px;
+}
+
+#uploading-empty {
+  /* The margins of the uploading row cause centering this to be weird,
+     so adjust it here by hand */
+  margin: -20px 0 20px 0;
+}

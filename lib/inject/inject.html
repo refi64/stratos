@@ -1,0 +1,63 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at https://mozilla.org/MPL/2.0/. -->
+
+<!--
+  This HTML will be added to the captures page
+  XXX: Why is this here? Should probably be in web/ with the other HTML... -->
+
+<!--
+  This template is used for the sync status icon added to individual captures
+-->
+<template dz-template="status-icon">
+  <!--
+    Set some random jsaction to prevent Wiz from letting the outer image /
+    video capture the event which results in the full-screen media viewer
+    opening when pressing the upload button. -->
+  <div class="stratos-injected stratos-status-icon" jsaction="uuup1e:cOuCgd">
+    <button class="PWHKGf" dz-actions="click:status-icon:upload">
+      <i class="google-material-icons UMzzDc">cloud_upload</i>
+      <span class="stratos-status-percent qpSCQe" style="display: none;">0%</span>
+    </button>
+</template>
+
+<!-- This template is used if authentication is required. -->
+<template dz-template="need-auth">
+  <div class="mFxDRe">
+    Click the Stratos extension icon to sign in to your Drive account and enable
+    capture uploads.
+  </div>
+</template>
+
+<style>
+  html body .CVVXfc {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  @keyframes stratos-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  [data-capture-id] .stratos-status-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 2px 2px 128px 128px;
+    background: linear-gradient(to top right, rgba(0, 0, 0, 0), 85%, rgba(0, 0, 0, 0.6));
+  }
+
+  .stratos-status-icon-non-interactive button {
+    pointer-events: none;
+  }
+
+  .stratos-status-icon-progress .google-material-icons {
+    animation: stratos-rotate 2s linear infinite;
+  }
+</style>
