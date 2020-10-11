@@ -116,21 +116,23 @@ class ProgressController extends TemplateController {
 
           _uploadingRow.percent
               .add((entry.value.status as InProgress).progress);
-        } else if (_goesInActiveTab(entry.value.status)) {
+        } else {
           if (_uploadingRow?.capture?.id == entry.key) {
             // No longer in the "uploading" state, so remove from that area.
             _clearUploadingRow();
           }
 
-          // Add this new row if it's not already present.
-          if (!_currentTabRows.containsKey(entry.key)) {
-            _addRow(entry.key);
-          }
-        } else {
-          // No longer visible in the current tab or in the upload section, so
-          // remove it if needed.
-          if (_currentTabRows.containsKey(entry.key)) {
-            _removeRow(entry.key);
+          if (_goesInActiveTab(entry.value.status)) {
+            // Add this new row if it's not already present.
+            if (!_currentTabRows.containsKey(entry.key)) {
+              _addRow(entry.key);
+            }
+          } else {
+            // No longer visible in the current tab or in the upload section, so
+            // remove it if needed.
+            if (_currentTabRows.containsKey(entry.key)) {
+              _removeRow(entry.key);
+            }
           }
         }
       }
