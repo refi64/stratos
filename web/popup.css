@@ -121,6 +121,7 @@ a, a:visited {
   margin: 16px;
   border-radius: 0.5rem;
   background-color: #ffffff0f;
+  overflow: hidden;
 }
 
 .progress-row-img {
@@ -139,6 +140,7 @@ a, a:visited {
 .progress-row-game {
   font-size: 18px;
   padding-bottom: 4px;
+  text-align: center;
 }
 
 .progress-row-date {
