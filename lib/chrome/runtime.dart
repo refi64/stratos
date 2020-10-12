@@ -13,6 +13,15 @@ import 'package:js/js.dart';
 import 'event.dart';
 
 @JS()
+@anonymous
+class LastError {
+  external String get message;
+}
+
+@JS()
+external LastError get lastError;
+
+@JS()
 external String getURL(String url);
 
 @JS()

@@ -10,6 +10,8 @@ import 'dart:async';
 
 import 'package:js/js.dart';
 
+import 'runtime.dart' as chrome_runtime;
+
 @JS()
 @anonymous
 class _AuthTokenOptions {
@@ -31,14 +33,20 @@ external void _getAuthToken(_AuthTokenOptions options, dynamic callback);
 
 /// Gets an active Google auth token for [scopes], returning `null` on failure.
 /// If the tokens are missing or expired, and [interactive] is true, new auth
-/// privileges will attempt to be gained.
+/// privileges will attempt to be gained. On failure, [AuthTokenError] may also
+/// be thrown.
+/// XXX: not sure if it's possible for the token to be undefined but
+/// [runtime.lastError] was undefined.
 Future<AuthTokenResult> getAuthToken({bool interactive, List<String> scopes}) {
   final completer = Completer<AuthTokenResult>();
-  _getAuthToken(
-      _AuthTokenOptions(interactive: interactive, scopes: scopes),
-      allowInterop(([String token, List<String> scopes]) => completer.complete(
-          token != null
-              ? AuthTokenResult(token: token, scopes: scopes)
-              : null)));
+  _getAuthToken(_AuthTokenOptions(interactive: interactive, scopes: scopes),
+      allowInterop(([String token, List<String> scopes]) {
+    if (token == null && chrome_runtime.lastError != null) {
+      completer.completeError(AuthTokenError(chrome_runtime.lastError.message));
+    } else {
+      completer.complete(
+          token != null ? AuthTokenResult(token: token, scopes: scopes) : null);
+    }
+  }));
   return completer.future;
 }
