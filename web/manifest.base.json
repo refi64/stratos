@@ -6,7 +6,7 @@
 {
   "name": "Stratos",
   "version": "0.1",
-  "description": "Upload your Stadia captures to Google Drive",
+  "description": "Sync your Stadia captures to Google Drive",
   "manifest_version": 2,
   "background": {
     "scripts": ["background.dart.js"],
