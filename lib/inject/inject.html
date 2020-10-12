@@ -21,11 +21,18 @@
     </button>
 </template>
 
-<!-- This template is used if authentication is required. -->
-<template dz-template="need-auth">
-  <div class="mFxDRe">
-    Click the Stratos extension icon to sign in to your Drive account and enable
-    capture uploads.
+<!--
+  This template goes in the "Captures" header to show high level status info
+-->
+<template dz-template="header">
+  <div class="stratos-header">
+    <div class="mFxDRe">
+      <div class="stratos-header-sign-in">
+        Click <a href="/captures#" dz-actions="click:header:auth">here</a> to
+        sign into Drive and enable Stratos.
+      </div>
+      <div dz-content="header:statusText"></div>
+    </div>
   </div>
 </template>
 
@@ -43,6 +50,11 @@
     to {
       transform: rotate(360deg);
     }
+  }
+
+  .stratos-header {
+    display: flex;
+    align-items: center;
   }
 
   [data-capture-id] .stratos-status-icon {

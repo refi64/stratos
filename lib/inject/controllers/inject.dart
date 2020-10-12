@@ -6,11 +6,11 @@ import 'dart:html';
 
 import 'package:meta/meta.dart';
 import 'package:stratos/drizzle/controller.dart';
-import 'package:stratos/inject/controllers/need_auth.dart';
 import 'package:stratos/inject/controllers/status_icon.dart';
 import 'package:stratos/log.dart';
 import 'package:stratos/message.dart';
 import '../assets.dart';
+import 'header.dart';
 
 /// A Drizzle controller that attaches to the root body and manages all the
 /// status icons and such inside.
@@ -24,22 +24,27 @@ class InjectController extends Controller<BodyElement> {
   final ClientSideMessagePipe pipe;
   final _allStatuses = <String, CaptureSyncStatus>{};
 
-  Element _captureHeading;
+  final _headerController = HeaderController();
+
+  /// This attribute is set on all capture grid members that have a status icon
+  /// attached, so we can quickly see if there are any that don't have an icon.
+  static const _hasSyncIconAttribute = 'stratos-has-sync-icon';
+
   bool _needsAuth = false;
   MutationObserver _observer;
 
   InjectController._(this.pipe) {
     pipe.onMessage.listen(_handleMessage);
-    pipe.outgoing.add(ClientToHostMessage.requestAuth());
   }
 
   @override
   void onAttach() {
-    // This is the "Captures" heading around the top of the page.
-    _captureHeading = element.querySelector('.CVVXfc.L7zYPb');
-
     element.appendHtml(injectedHtml.text,
         treeSanitizer: NodeTreeSanitizer.trusted);
+
+    // This is the "Captures" heading at the top of the page.
+    var capturesHeading = element.querySelector('.CVVXfc.L7zYPb');
+    _headerController.instantiateInto(capturesHeading);
 
     // This is the grid of all the individual captures.
     var capturesGrid = element.querySelector('.au9T5d');
@@ -66,8 +71,10 @@ class InjectController extends Controller<BodyElement> {
   /// Takes any sync availability update messages and notifies the user if
   /// needed.
   void _updateSyncAvailability(bool enabled) {
+    logger.d('New sync availability: $enabled');
+
     if (!enabled) {
-      NeedAuthController().instantiateInto(_captureHeading);
+      _headerController.syncAvailability.add(false);
       _needsAuth = true;
     } else if (_needsAuth) {
       // Managing all of this state is hard, so reloading on auth is easier...
@@ -80,9 +87,14 @@ class InjectController extends Controller<BodyElement> {
   StatusIconController _getOrInstantiateStatusIcon(
       {@required Element parent, @required String id}) {
     var injected = parent.querySelector('.stratos-injected');
-    return injected != null
-        ? Controller.ofElement<Element, StatusIconController>(injected)
-        : (StatusIconController(id: id)..instantiateInto(parent));
+    if (injected != null) {
+      return Controller.ofElement<Element, StatusIconController>(injected);
+    }
+
+    var controller = StatusIconController(id: id);
+    controller.instantiateInto(parent);
+    parent.setAttribute(_hasSyncIconAttribute, '');
+    return controller;
   }
 
   /// Updates the status icon controller of the given capture element of the
@@ -96,24 +108,33 @@ class InjectController extends Controller<BodyElement> {
 
     var controller =
         _getOrInstantiateStatusIcon(parent: captureElement, id: id);
-    controller.updateStatus(_allStatuses[id].status);
+    controller.statuses.add(_allStatuses[id].status);
   }
 
-  /// Updates the sync icon at the very top of the page. If [hintOneInProgress]
+  /// Updates the header at the very top of the page. If [hintOneInProgress]
   /// is given, it means at least one capture upload is guaranteed to be in
   /// progress.
-  void _updateTopIcon({bool hintOneInProgress}) {
-    var syncAllController = _getOrInstantiateStatusIcon(
-        parent: _captureHeading, id: StatusIconController.idSyncAll);
-
-    // The capture icon at the top has three states:
+  void _updateHeader({bool hintOneInProgress}) {
+    // The capture icon at the top has five states:
+    // - Shows the sync disabled icon & some status text if auth is required.
+    // - Shows the progress icon & some status text if not all grid items have
+    //   icons attached.
     // - Shows the progress icon if a sync is underway.
     // - Shows the upload icon if at least one capture is not synced but no
     //   syncs is currently in progress.
     // - Shows the check if all are synced.
-    // This means that, if one is known to be in progress, the state shown is
-    // *guaranteed* to be the progress icon. Thus, we can shortcut scanning
-    // the captures list once we know at least one is in progress.
+    // The first case is already handled elsewhere, and the second case is the
+    // default state; we can check if it needs to remain that way quickly at
+    // the very start.
+    // Afterwards, if at least one capture is known to be in progress, the state
+    // shown is *guaranteed* to be the progress icon. Thus, we can shortcut
+    // scanning the captures list once we know at least one is in progress.
+
+    if (element
+            .querySelector('[data-capture-id]:not([$_hasSyncIconAttribute])') !=
+        null) {
+      return;
+    }
 
     var atLeastOneInProgress = hintOneInProgress;
     var atLeastOneUnsynced = false;
@@ -131,11 +152,11 @@ class InjectController extends Controller<BodyElement> {
     }
 
     if (atLeastOneInProgress) {
-      syncAllController.updateStatus(SyncStatus.inProgress());
+      _headerController.statuses.add(SyncStatus.inProgress());
     } else if (atLeastOneUnsynced) {
-      syncAllController.updateStatus(SyncStatus.unsynced());
+      _headerController.statuses.add(SyncStatus.unsynced());
     } else {
-      syncAllController.updateStatus(SyncStatus.complete());
+      _headerController.statuses.add(SyncStatus.complete());
     }
   }
 
@@ -161,7 +182,7 @@ class InjectController extends Controller<BodyElement> {
       }
     }
 
-    _updateTopIcon(hintOneInProgress: atLeastOneInProgress);
+    _updateHeader(hintOneInProgress: atLeastOneInProgress);
   }
 
   void _handleMessage(HostToClientMessage message) {

@@ -4,7 +4,7 @@
 
 import 'dart:async';
 
-import 'package:stratos/auth.dart';
+import 'package:stratos/background/auth.dart';
 import 'package:stratos/background/sync.dart';
 import 'package:stratos/capture.dart';
 import 'package:stratos/log.dart';
@@ -18,7 +18,8 @@ class MessageHandler {
   /// user of the handler should forward these back to the client.
   Stream<HostToClientMessage> get outgoing => _outgoingController.stream;
 
-  final _sync = SyncService();
+  final AuthService _authService;
+  final SyncService _sync;
   // NOTE: Really, this should one map of String: CaptureSyncStatus, instead of
   // separate captures & statuses, but at the first time this code was written,
   // CaptureSyncStatus didn't exist, and...to be frank, I don't feel like
@@ -28,7 +29,9 @@ class MessageHandler {
   // every time.
   final _statuses = <String, SyncStatus>{};
 
-  MessageHandler() {
+  MessageHandler(AuthService authService)
+      : _authService = authService,
+        _sync = SyncService(authService) {
     _sync.onProgress.listen((result) {
       logger.d('Sync progress for ${result.capture.id}: ${result.status}');
       if (_statuses.containsKey(result.capture.id)) {
@@ -67,12 +70,7 @@ class MessageHandler {
   }
 
   Future<void> _handleRequestAuth() async {
-    if (await obtainCredentials(interactive: true) != null) {
-      await setNeedsReauth(false);
-      _outgoingController.add(HostToClientMessage.syncAvailability(true));
-    } else {
-      _outgoingController.add(HostToClientMessage.syncAvailability(false));
-    }
+    await _authService.runInteractiveAuthRequest();
   }
 
   Future<void> _handleLatestCaptures(
@@ -106,6 +104,9 @@ class MessageHandler {
           currentChanges[id] = await _sync.alreadySynced(id)
               ? SyncStatus.complete()
               : SyncStatus.unsynced();
+        } on MissingAuthException {
+          logger.i('Lost auth access, so stopping change checks');
+          break;
         } catch (ex) {
           logger.e('Checking capture sync status: $ex');
           currentChanges[id] = SyncStatus.unsynced();

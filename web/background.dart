@@ -2,14 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import 'package:stratos/auth.dart';
+import 'package:stratos/background/auth.dart';
 import 'package:stratos/message.dart';
 import 'package:stratos/background/handler.dart';
 import 'package:stratos/log.dart';
 import 'package:stratos/chrome/runtime.dart' as chrome_runtime;
 
 void actualMain() {
-  var handler = MessageHandler();
+  var authService = AuthService();
+  var handler = MessageHandler(authService);
 
   chrome_runtime.onConnect.listen((port) {
     if (port.name != messagePort) {
@@ -25,13 +26,15 @@ void actualMain() {
     var sendSub =
         handler.outgoing.listen((message) => pipe.outgoing.add(message));
 
-    var authSub = watchNeedsReauth().listen((needsReauth) {
-      pipe.outgoing.add(HostToClientMessage.syncAvailability(!needsReauth));
+    var authSub = authService.hasAuth.listen((hasAuth) {
+      pipe.outgoing.add(HostToClientMessage.syncAvailability(hasAuth));
     });
 
-    // Make sure the new client has all the updated statuses.
+    // Make sure the new client has all the updated statuses and sync
+    // availability.
     // XXX: right now this sends the updated statuses to *all* clients. Really,
     // it should only be sending them to the new one...
+    authService.sendAuthStatus();
     handler.sendCurrentStatuses();
 
     port.onDisconnect.then((void _) {

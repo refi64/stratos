@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'dart:html';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:stratos/capture.dart';
 import 'package:stratos/chrome/runtime.dart' as chrome_runtime;
 
@@ -172,8 +173,8 @@ class WindowMessagePipeDelegate implements MessagePipeDelegate {
 
   @override
   Stream<String> get onMessage => window.onMessage
-      .where((event) => event.data is String)
-      .map((event) => event.data as String)
+      .map<dynamic>((event) => event.data)
+      .whereType<String>()
       .where((message) => message.startsWith(_incomingPrefix))
       .map((message) => message.substring(_incomingPrefix.length));
 

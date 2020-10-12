@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:meta/meta.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:stratos/drizzle/template.dart';
 import 'package:stratos/drizzle/utils.dart';
 import 'package:stratos/inject/controllers/inject.dart';
@@ -29,8 +31,23 @@ class StatusIconController extends TemplateController {
   /// The DOM element holding the current upload percentage.
   Element _percent;
 
+  /// The stream of new statuses.
+  final _statusSubject = BehaviorSubject<SyncStatus>.seeded(null);
+
+  /// A sink for adding new statuses.
+  StreamSink<SyncStatus> get statuses => _statusSubject.sink;
+
+  /// The stream of the sync availability.
+  final _syncAvailabilitySubject = BehaviorSubject<bool>.seeded(true);
+
+  /// A sink for updating the sync availability.
+  StreamSink<bool> get syncAvailability => _syncAvailabilitySubject.sink;
+
   StatusIconController({@required this.id}) {
     installActions({'upload': _upload});
+
+    _statusSubject.listen((_) => _update());
+    _syncAvailabilitySubject.listen((_) => _update());
   }
 
   @override
@@ -39,14 +56,10 @@ class StatusIconController extends TemplateController {
     _percent = element.querySelector('.stratos-status-percent');
   }
 
-  /// Updates the current icon state to match the given status.
-  void updateStatus(SyncStatus status) {
-    // XXX: Currently, syncing all captures through here is unsupported. Why? I
-    // have no freaking idea. It was weird and I didn't want to mess with it.
-    // IIRC, the user was able to click it and request a full sync before all
-    // the statuses were checked, which was somewhat bizarre behavior. This
-    // really should be fixed...
-    if (status is Unsynced && id != idSyncAll) {
+  void _update() {
+    var status = _statusSubject.value;
+
+    if (status is Unsynced) {
       element.classes.remove('stratos-status-icon-non-interactive');
     } else {
       element.classes.add('stratos-status-icon-non-interactive');
@@ -62,16 +75,20 @@ class StatusIconController extends TemplateController {
       _icon.show();
       _percent.hide();
 
-      var icon = status.when(
-          unsynced: () => 'cloud_upload',
-          inProgress: (_) => 'sync',
-          complete: () => 'check_circle');
+      var syncDisabled = !_syncAvailabilitySubject.value;
+      var icon = syncDisabled
+          ? 'sync_disabled'
+          : (status?.when(
+                  unsynced: () => 'cloud_upload',
+                  inProgress: (_) => 'sync',
+                  complete: () => 'check_circle') ??
+              'sync');
 
       _icon.innerText = icon;
 
       // This is down here to ensure animating the progress icon doesn't occur
       // if a textual percentage is shown.
-      if (status is InProgress) {
+      if (icon == 'sync') {
         element.classes.add('stratos-status-icon-progress');
       } else {
         element.classes.remove('stratos-status-icon-progress');
@@ -80,7 +97,7 @@ class StatusIconController extends TemplateController {
   }
 
   void _upload(Element button, Event event) {
-    updateStatus(SyncStatus.inProgress());
+    statuses.add(SyncStatus.inProgress());
 
     var inject =
         findParentByName<InjectController>(InjectController.factoryName);

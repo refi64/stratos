@@ -9,6 +9,7 @@ library stratos.chrome.identity;
 import 'dart:async';
 
 import 'package:js/js.dart';
+import 'package:meta/meta.dart';
 
 import 'runtime.dart' as chrome_runtime;
 
@@ -21,6 +22,14 @@ class _AuthTokenOptions {
   external factory _AuthTokenOptions({bool interactive, List<String> scopes});
 }
 
+@JS()
+@anonymous
+class _RemoveTokenOptions {
+  external String get token;
+
+  external factory _RemoveTokenOptions({String token});
+}
+
 class AuthTokenResult {
   final String token;
   final List<String> scopes;
@@ -28,8 +37,19 @@ class AuthTokenResult {
   AuthTokenResult({this.token, this.scopes});
 }
 
+class AuthTokenError implements Exception {
+  String message;
+  AuthTokenError(this.message);
+  @override
+  String toString() => message;
+}
+
 @JS('getAuthToken')
 external void _getAuthToken(_AuthTokenOptions options, dynamic callback);
+
+@JS('removeCachedAuthToken')
+external void _removeCachedAuthToken(
+    _RemoveTokenOptions options, dynamic callback);
 
 /// Gets an active Google auth token for [scopes], returning `null` on failure.
 /// If the tokens are missing or expired, and [interactive] is true, new auth
@@ -48,5 +68,12 @@ Future<AuthTokenResult> getAuthToken({bool interactive, List<String> scopes}) {
           token != null ? AuthTokenResult(token: token, scopes: scopes) : null);
     }
   }));
+  return completer.future;
+}
+
+Future<void> removeCachedAuthToken({@required String token}) {
+  final completer = Completer<void>();
+  _removeCachedAuthToken(_RemoveTokenOptions(token: token),
+      allowInterop(() => completer.complete()));
   return completer.future;
 }

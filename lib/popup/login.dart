@@ -4,7 +4,6 @@
 
 import 'dart:html';
 
-import 'package:stratos/auth.dart';
 import 'package:stratos/message.dart';
 import 'package:stratos/drizzle/template.dart';
 import 'package:stratos/popup/app.dart';
@@ -16,10 +15,7 @@ class LoginController extends TemplateController {
   }
 
   void login(Element el, Event event) async {
-    await setNeedsReauth(true);
-
     var app = findParentByFactory(AppController.factory);
-    app.authState.add(AuthState.inProgress);
     app.pipe.outgoing.add(ClientToHostMessage.requestAuth());
   }
 

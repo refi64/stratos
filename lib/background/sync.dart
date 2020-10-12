@@ -7,7 +7,7 @@ import 'dart:async';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:googleapis/drive/v3.dart';
 import 'package:http/http.dart' as http;
-import 'package:stratos/auth.dart';
+import 'package:stratos/background/auth.dart';
 import 'package:stratos/fetch.dart';
 import 'package:stratos/log.dart';
 
@@ -31,8 +31,8 @@ class SyncService {
   final _client = FetchBrowserClient();
   DriveApi _api;
 
-  SyncService() {
-    _api = DriveApi(ChromeAuthClient(_client));
+  SyncService(AuthService authService) {
+    _api = DriveApi(ChromeAuthClient(_client, authService));
     _startSyncService();
   }
 

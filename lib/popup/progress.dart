@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
@@ -14,13 +15,18 @@ import 'package:stratos/drizzle/utils.dart';
 import 'package:stratos/popup/row.dart';
 import 'package:stratos/popup/tabs.dart';
 
-import 'app.dart';
-
 /// A Drizzle controller that shows a list of known captures and any progress
 /// being taken to upload them.
 class ProgressController extends TemplateController {
   @override
   String get template => 'progress';
+
+  final _updatedCaptureStatusesController =
+      StreamController<Map<String, CaptureSyncStatus>>();
+
+  /// Output sink to place updated captures into.
+  StreamSink<Map<String, CaptureSyncStatus>> get updatedCaptureStatuses =>
+      _updatedCaptureStatusesController.sink;
 
   /// The DOM ID of the tab for unsynced captures.
   static const _unsyncedTabId = 'unsynced';
@@ -54,16 +60,14 @@ class ProgressController extends TemplateController {
       'goToCaptures': _goToCaptures,
       'switchTab': (el, event) => _setActive(el.id),
     });
+
+    _updatedCaptureStatusesController.stream.listen(_onUpdatedCaptures);
   }
 
   @override
   void onAttach() {
     _tabRow = element.querySelector('#tabs');
     _view = element.querySelector('#view');
-
-    findParentByFactory(AppController.factory).pipe.onMessage.listen(
-        (message) => message.maybeWhen<void>(
-            updateCaptureStatuses: _onUpdatedCaptures, orElse: () {}));
   }
 
   @override
