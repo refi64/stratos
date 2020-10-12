@@ -9,16 +9,17 @@ import 'package:stratos/log.dart';
 import 'package:stratos/message.dart';
 
 void actualMain() {
+  var hostPipeDelegate = PortMessagePipeDelegate.connect();
+  var clientPipeDelegate = WindowHostMessagePipeDelegate();
+  var bridge = MessagePipeBridge(clientPipeDelegate, hostPipeDelegate);
+
+  // Don't start forwarding until the client is ready, so we'll stay collecting
+  // messages until then.
+  clientPipeDelegate.onClientReady.then((_) => bridge.forwardAll());
+
   var el = ScriptElement();
   el.src = chrome_runtime.getURL('inject.dart.js');
   document.documentElement.append(el);
-
-  // Pretend we are the host to bridge the messages, so the injected script can
-  // talk to the host side.
-  var clientPipeDelegate = WindowMessagePipeDelegate(side: MessageSide.host);
-  var hostPipeDelegate = PortMessagePipeDelegate.connect();
-
-  MessagePipeBridge(clientPipeDelegate, hostPipeDelegate).forwardAll();
 }
 
 void main() => mainWrapper(actualMain);

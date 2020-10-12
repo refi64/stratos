@@ -22,8 +22,9 @@ part 'message.g.dart';
 enum MessageSide { client, host }
 
 const messagePort = 'stratos-messages';
-const clientToHostMessagePrefix = 'stratus-message-client-to-host:';
-const hostToClientMessagePrefix = 'stratus-message-host-to-client:';
+const clientToHostMessagePrefix = 'stratos-message-client-to-host:';
+const hostToClientMessagePrefix = 'stratos-message-host-to-client:';
+const clientReady = 'stratos-message-client-ready';
 
 abstract class MessageToJson {
   dynamic toJson();
@@ -184,6 +185,23 @@ class WindowMessagePipeDelegate implements MessagePipeDelegate {
   void close() {}
 }
 
+/// A [WindowMessagePipeDelegate] for the client end of a single client-host
+/// pair that notifies the host once messages start being read.
+class WindowClientMessagePipeDelegate extends WindowMessagePipeDelegate {
+  WindowClientMessagePipeDelegate() : super(side: MessageSide.client) {
+    window.postMessage(clientReady, '*');
+  }
+}
+
+/// A [WindowMessagePipeDelegate] for the server end of a single client-host
+/// pair that can check when the client is ready to start receiving messages.
+class WindowHostMessagePipeDelegate extends WindowMessagePipeDelegate {
+  WindowHostMessagePipeDelegate() : super(side: MessageSide.host);
+
+  Future<void> get onClientReady =>
+      window.onMessage.firstWhere((event) => event.data == clientReady);
+}
+
 /// A "pipe" that can be used to send messages to a host or client.
 class MessagePipe<Outgoing extends MessageToJson,
     Incoming extends MessageToJson> {
@@ -224,17 +242,35 @@ class MessagePipe<Outgoing extends MessageToJson,
   void close() => delegate.close();
 }
 
+/// A small [MessageToJson] implementation that simply wraps the raw JSON data.
+class _JsonToJson implements MessageToJson {
+  final Map<String, dynamic> json;
+  _JsonToJson(this.json);
+
+  @override
+  Map<String, dynamic> toJson() => json;
+}
+
 /// A bridge that forwards the messages incoming on one message pipe to those
 /// outgoing on another. This is a bidirectional bridge, so both side's incoming
 /// will be forwarded to the other's outgoing.
 class MessagePipeBridge {
-  final MessagePipeDelegate first, second;
-  MessagePipeBridge(this.first, this.second);
+  // MessagePipeDelegates will generally have broadcast streams, while
+  // MessagePipes have single-subscription streams. This means that, if we
+  // forward the raw delegates, we may miss messages, but forwarding pipes
+  // will work because single-subscription streams save up messages until a
+  // listener.
+  final MessagePipe first, second;
+  MessagePipeBridge(MessagePipeDelegate first, MessagePipeDelegate second)
+      : first = MessagePipe(
+            incomingFactory: (data) => _JsonToJson(data), delegate: first),
+        second = MessagePipe(
+            incomingFactory: (data) => _JsonToJson(data), delegate: second);
 
-  /// FOrward all messages bidirectionally between the delegates.
+  /// Forward all messages bidirectionally between the delegates.
   Future<void> forwardAll() => Future.wait<void>([
-        first.onMessage.forEach(second.post),
-        second.onMessage.forEach(first.post)
+        first.onMessage.forEach(second.outgoing.add),
+        second.onMessage.forEach(first.outgoing.add)
       ]);
 }
 

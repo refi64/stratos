@@ -19,8 +19,7 @@ void attach(ControllerFactory<InjectController> injectFactory) {
 }
 
 void actualMain() {
-  var pipe = ClientSideMessagePipe(
-      WindowMessagePipeDelegate(side: MessageSide.client));
+  var pipe = ClientSideMessagePipe(WindowClientMessagePipeDelegate());
   var firstCaptureSet = true;
 
   CapturesInterceptor()
