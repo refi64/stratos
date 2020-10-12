@@ -27,6 +27,11 @@
 
   <template dz-template="progress">
     <div id="progress">
+      <div id="header">
+        <h1>Stratos</h1>
+        <a href="#" dz-actions="click:progress:goToHelp">Help</a>
+      </div>
+
       <div dz-controller="tabs" data-tabs-active-class="active" id="tabs">
         <span id="unsynced" class="tab" dz-actions="attach:tabs;click:tabs">Unsynced</span>
         <span id="synced" class="tab" dz-actions="attach:tabs;click:tabs">Synced</span>

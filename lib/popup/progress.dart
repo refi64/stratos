@@ -58,6 +58,7 @@ class ProgressController extends TemplateController {
 
     installActions({
       'goToCaptures': _goToCaptures,
+      'goToHelp': _goToHelp,
       'switchTab': (el, event) => _setActive(el.id),
     });
 
@@ -176,6 +177,10 @@ class ProgressController extends TemplateController {
 
   void _goToCaptures(Element link, Event event) {
     chrome_tabs.create(url: 'https://stadia.google.com/captures', active: true);
+  }
+
+  void _goToHelp(Element link, Event event) {
+    chrome_tabs.create(url: 'https://stratos.refi64.com/', active: true);
   }
 
   /// Sets the rows to match the new active tab, [tabId].

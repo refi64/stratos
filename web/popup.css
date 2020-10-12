@@ -22,6 +22,22 @@ h1 {
   font-size: 32px;
 }
 
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  /* border-bottom: 2px solid white; */
+}
+
+#header h1 {
+  margin: 0;
+}
+
+#header a {
+  font-size: 16px;
+}
+
 button {
   color: white;
   background-color: #9f3a3a;
@@ -94,7 +110,7 @@ button:active {
 }
 
 #view {
-  height: 360px;
+  height: 320px;
   overflow-y: auto;
 }
 
