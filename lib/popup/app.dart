@@ -17,6 +17,10 @@ class AppController extends Controller {
 
   TemplateController _contentController;
 
+  // Statuses get saved here, so they're preserved across ProgressController
+  // lifetimes.
+  final _savedStatuses = <String, CaptureSyncStatus>{};
+
   AppController._() {
     pipe.onMessage.listen((message) => message.when(
         syncAvailability: _updateSyncAvailability,
@@ -25,13 +29,18 @@ class AppController extends Controller {
 
   void _updateSyncAvailability(bool available) {
     if (available) {
-      _replaceControllerIfNotSame(() => ProgressController());
+      _replaceControllerIfNotSame(() => ProgressController(),
+          // Forward all the saved up statuses to the new controller.
+          postInstantiate: (ProgressController controller) =>
+              controller.updatedCaptureStatuses.add(_savedStatuses));
     } else {
       _replaceControllerIfNotSame(() => LoginController());
     }
   }
 
   void _updateCaptureStatuses(Map<String, CaptureSyncStatus> statuses) {
+    _savedStatuses.addAll(statuses);
+
     if (_contentController is ProgressController) {
       (_contentController as ProgressController)
           .updatedCaptureStatuses
@@ -42,10 +51,14 @@ class AppController extends Controller {
   /// Replaces the current child element controller if it is not already an
   /// instance of the desired one.
   void _replaceControllerIfNotSame<C extends TemplateController>(
-      C Function() factory) {
+      C Function() factory,
+      {void Function(C controller) postInstantiate}) {
     if (_contentController is! C) {
       _contentController = factory();
       _contentController.instantiateReplacing(element.children.first);
+      if (postInstantiate != null) {
+        postInstantiate(_contentController as C);
+      }
     }
   }
 }
