@@ -6,4 +6,6 @@
 
 zip:
 	rm -f stratos.zip
-	cd build; zip -r ../stratos.zip -x'packages/*' -x'.dart_tool/*' -x'.build.manifest' -x'.packages' .
+	cd build; zip -r ../stratos.zip \
+		-x'packages/*' -x'.dart_tool/*' -x'.build.manifest' -x'.packages' \
+		-x'*.dart' -x'*.map' -x'*.deps' -x'manifest.*.json' .
