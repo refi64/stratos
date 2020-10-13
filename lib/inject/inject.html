@@ -31,7 +31,11 @@
         Click <a href="/captures#" dz-actions="click:header:auth">here</a> to
         sign into Drive and enable Stratos.
       </div>
-      <div dz-content="header:statusText"></div>
+      <div class="stratos-header-check">
+        [<span dz-content="header:checked">?</span> /
+        <span dz-content="header:totalToCheck">?</span>]
+        Checking capture statuses...
+      </div>
     </div>
   </div>
 </template>

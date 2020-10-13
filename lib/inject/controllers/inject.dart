@@ -123,16 +123,22 @@ class InjectController extends Controller<BodyElement> {
     // - Shows the upload icon if at least one capture is not synced but no
     //   syncs is currently in progress.
     // - Shows the check if all are synced.
-    // The first case is already handled elsewhere, and the second case is the
-    // default state; we can check if it needs to remain that way quickly at
-    // the very start.
+    // The first case is already handled elsewhere, and the second case is
+    // quickly checked right at the start.
     // Afterwards, if at least one capture is known to be in progress, the state
     // shown is *guaranteed* to be the progress icon. Thus, we can shortcut
     // scanning the captures list once we know at least one is in progress.
 
-    if (element
-            .querySelector('[data-capture-id]:not([$_hasSyncIconAttribute])') !=
-        null) {
+    var unsynced = element
+        .querySelectorAll('[data-capture-id]:not([$_hasSyncIconAttribute])');
+    if (unsynced.isNotEmpty) {
+      _headerController.statuses.add(null);
+      // XXX: This might show weird counts if the user deletes captures, but
+      // it's a passable con in favor of avoiding more DOM queries.
+      var total = unsynced.length + _allStatuses.length;
+      _headerController.checkProgress.add(CaptureStatusCheckProgress(
+          checked: _allStatuses.length, total: total));
+
       return;
     }
 

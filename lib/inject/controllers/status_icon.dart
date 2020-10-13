@@ -31,7 +31,8 @@ class StatusIconController extends TemplateController {
   /// The DOM element holding the current upload percentage.
   Element _percent;
 
-  /// The stream of new statuses.
+  /// The stream of new statuses. `null` is used for [idSyncAll] to show that
+  /// the status of different captures is still being checked.
   final _statusSubject = BehaviorSubject<SyncStatus>.seeded(null);
 
   /// A sink for adding new statuses.
