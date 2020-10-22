@@ -33,11 +33,6 @@ CaptureSet parseCapturesResponse(dynamic response) {
     // If data[7] is null, it's a video with the data in data[8], otherwise it's
     // a still image.
     if (data[7] == null) {
-      if (data[8][3][3] == null) {
-        // Still processing.
-        continue;
-      }
-
       size = Size(width: data[8][3][1] as int, height: data[8][3][2] as int);
       image = data[8][0][0] as String;
       url = data[8][1] as String;
