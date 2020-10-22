@@ -43,7 +43,7 @@ abstract class SyncStatus with _$SyncStatus {
   factory SyncStatus.inProgress([double progress]) = InProgress;
 
   /// The capture is uploaded safely.
-  factory SyncStatus.complete() = Complete;
+  factory SyncStatus.complete(String link) = Complete;
 
   factory SyncStatus.fromJson(Map<String, dynamic> json) =>
       _$SyncStatusFromJson(json);

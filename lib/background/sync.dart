@@ -26,6 +26,13 @@ final _capturesDirValue = 'yes';
 final _gameNameProperty = 'game-name';
 final _captureIdProperty = 'capture-id';
 
+final _webViewLinkField = 'webViewLink';
+
+final _contentTypeExtensions = {
+  'image/jpeg': 'jpg',
+  'video/webm': 'webm',
+};
+
 /// The actual sync engine implementation.
 class SyncService {
   final _client = FetchBrowserClient();
@@ -61,7 +68,8 @@ class SyncService {
       {String parent,
       String name,
       String mimeType,
-      Map<String, String> appProperties}) async {
+      Map<String, String> appProperties,
+      List<String> extraFields}) async {
     var query = <String>[];
     if (parent != null) {
       query.add("'${_escapeQueryValue(parent)}' in parents");
@@ -80,11 +88,16 @@ class SyncService {
       }
     }
 
+    var fields = ['id'];
+    if (extraFields != null) {
+      fields.addAll(extraFields);
+    }
+
     var matches = await _api.files.list(
         corpora: 'user',
         pageSize: 1,
         q: query.join(' and '),
-        $fields: 'files(id)');
+        $fields: 'files(${fields.join(',')})');
     return matches.files.isNotEmpty ? matches.files.first : null;
   }
 
@@ -111,19 +124,21 @@ class SyncService {
     }
   }
 
-  /// Checks if the given capture is already synced.
-  Future<bool> alreadySynced(String captureId) async {
-    var file =
-        await _searchForFile(appProperties: {_captureIdProperty: captureId});
-    return file != null;
+  /// Checks if the given capture is already synced, and if so, returns the
+  /// link to view the file. Otherwise, returns null.
+  Future<String> getAlreadySyncedLink(String captureId) async {
+    var file = await _searchForFile(
+        appProperties: {_captureIdProperty: captureId},
+        extraFields: [_webViewLinkField]);
+    return file?.webViewLink;
   }
 
   /// Runs a sync operation for the given capture.
   void _runSync(Capture capture) async {
-    var success = false;
+    String resultLink;
 
     try {
-      if (await alreadySynced(capture.id)) {
+      if (await getAlreadySyncedLink(capture.id) != null) {
         logger.i('Avoiding duplicate upload of ${capture.id}');
         return;
       }
@@ -140,6 +155,14 @@ class SyncService {
       var response = await _client.send(request);
 
       var contentType = response.headers[_contentTypeHeader];
+
+      var outputName = capture.creation.toString().split('.')[0];
+      var ext = _contentTypeExtensions[contentType];
+      if (ext != null) {
+        outputName += '.$ext';
+      } else {
+        logger.w('Unexpected content type: $contentType');
+      }
 
       // Send progress updates as data is read.
       var readBytes = 0;
@@ -161,21 +184,24 @@ class SyncService {
           contentType: contentType);
 
       var file = File()
-        ..name = capture.creation.toString().split('.')[0]
+        ..name = outputName
         ..mimeType = contentType
         ..parents = [game.id]
         ..createdTime = capture.creation.toUtc()
         ..appProperties = {_captureIdProperty: capture.id};
-      await _api.files.create(file,
+      var result = await _api.files.create(file,
           enforceSingleParent: true,
           uploadOptions: UploadOptions.Default,
           uploadMedia: media,
-          $fields: 'id');
+          $fields: 'id,$_webViewLinkField');
 
-      success = true;
+      resultLink = result.webViewLink;
     } finally {
       _progressController.add(CaptureSyncStatus(
-          capture, success ? SyncStatus.complete() : SyncStatus.unsynced()));
+          capture,
+          resultLink != null
+              ? SyncStatus.complete(resultLink)
+              : SyncStatus.unsynced()));
     }
   }
 

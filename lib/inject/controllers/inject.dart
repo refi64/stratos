@@ -162,7 +162,7 @@ class InjectController extends Controller<BodyElement> {
     } else if (atLeastOneUnsynced) {
       _headerController.statuses.add(SyncStatus.unsynced());
     } else {
-      _headerController.statuses.add(SyncStatus.complete());
+      _headerController.statuses.add(SyncStatus.complete(null));
     }
   }
 

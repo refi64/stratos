@@ -101,9 +101,9 @@ class MessageHandler {
         currentChanges[id] = _statuses[id];
       } else {
         try {
-          currentChanges[id] = await _sync.alreadySynced(id)
-              ? SyncStatus.complete()
-              : SyncStatus.unsynced();
+          var url = await _sync.getAlreadySyncedLink(id);
+          currentChanges[id] =
+              url != null ? SyncStatus.complete(url) : SyncStatus.unsynced();
         } on MissingAuthException {
           logger.i('Lost auth access, so stopping change checks');
           break;

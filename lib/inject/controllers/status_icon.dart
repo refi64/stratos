@@ -45,7 +45,7 @@ class StatusIconController extends TemplateController {
   StreamSink<bool> get syncAvailability => _syncAvailabilitySubject.sink;
 
   StatusIconController({@required this.id}) {
-    installActions({'upload': _upload});
+    installActions({'click': _click});
 
     _statusSubject.listen((_) => _update());
     _syncAvailabilitySubject.listen((_) => _update());
@@ -60,7 +60,7 @@ class StatusIconController extends TemplateController {
   void _update() {
     var status = _statusSubject.value;
 
-    if (status is Unsynced) {
+    if (status is Unsynced || (status is Complete && status.link != null)) {
       element.classes.remove('stratos-status-icon-non-interactive');
     } else {
       element.classes.add('stratos-status-icon-non-interactive');
@@ -82,7 +82,7 @@ class StatusIconController extends TemplateController {
           : (status?.when(
                   unsynced: () => 'cloud_upload',
                   inProgress: (_) => 'sync',
-                  complete: () => 'check_circle') ??
+                  complete: (_) => 'check_circle') ??
               'sync');
 
       _icon.innerText = icon;
@@ -97,13 +97,17 @@ class StatusIconController extends TemplateController {
     }
   }
 
-  void _upload(Element button, Event event) {
-    statuses.add(SyncStatus.inProgress());
+  void _click(Element button, Event event) {
+    if (_statusSubject.value is Complete) {
+      window.open((_statusSubject.value as Complete).link, '_blank');
+    } else {
+      statuses.add(SyncStatus.inProgress());
 
-    var inject =
-        findParentByName<InjectController>(InjectController.factoryName);
-    inject.pipe.outgoing.add(id == idSyncAll
-        ? ClientToHostMessage.requestSyncAll()
-        : ClientToHostMessage.requestSync(id));
+      var inject =
+          findParentByName<InjectController>(InjectController.factoryName);
+      inject.pipe.outgoing.add(id == idSyncAll
+          ? ClientToHostMessage.requestSyncAll()
+          : ClientToHostMessage.requestSync(id));
+    }
   }
 }
