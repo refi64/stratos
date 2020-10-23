@@ -4,19 +4,10 @@
 
 import 'dart:html';
 
-import 'package:stratos/drizzle/application.dart';
-import 'package:stratos/drizzle/attributes.dart';
-import 'package:stratos/drizzle/controller.dart';
 import 'package:stratos/inject/captures_interceptor.dart';
-import 'package:stratos/inject/controllers/inject.dart';
+import 'package:stratos/inject/controllers/page.dart';
 import 'package:stratos/log.dart';
 import 'package:stratos/message.dart';
-
-void attach(ControllerFactory<InjectController> injectFactory) {
-  document.body.setAttribute(DZ_CONTROLLER, injectFactory.name);
-  Application.register(injectFactory);
-  Application.attach();
-}
 
 void actualMain() {
   var pipe = ClientSideMessagePipe(WindowClientMessagePipeDelegate());
@@ -31,12 +22,12 @@ void actualMain() {
             firstCaptureSet = false;
           }));
 
-  var injectFactory = InjectController.createFactory(pipe);
+  var pageFactory = PageController.createFactory(pipe);
 
   if (document.readyState == 'complete') {
-    attach(injectFactory);
+    pageFactory.instantiate(document.body);
   } else {
-    window.onLoad.listen((event) => attach(injectFactory));
+    window.onLoad.listen((event) => pageFactory.instantiate(document.body));
   }
 }
 

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:meta/meta.dart';
@@ -14,14 +15,10 @@ import 'header.dart';
 
 /// A Drizzle controller that attaches to the root body and manages all the
 /// status icons and such inside.
-/// XXX: This shouldn't be called "app", that makes no sense.
-class InjectController extends Controller<BodyElement> {
-  static const factoryName = 'app';
-  static ControllerFactory<InjectController> createFactory(
-          ClientSideMessagePipe pipe) =>
-      ControllerFactory(factoryName, () => InjectController._(pipe));
+class CapturesController extends Controller {
+  static final factory =
+      ControllerFactory('captures', () => CapturesController._());
 
-  final ClientSideMessagePipe pipe;
   final _allStatuses = <String, CaptureSyncStatus>{};
 
   final _headerController = HeaderController();
@@ -30,15 +27,25 @@ class InjectController extends Controller<BodyElement> {
   /// attached, so we can quickly see if there are any that don't have an icon.
   static const _hasSyncIconAttribute = 'stratos-has-sync-icon';
 
-  bool _needsAuth = false;
+  var _needsAuth = false;
+
   MutationObserver _observer;
 
-  InjectController._(this.pipe) {
-    pipe.onMessage.listen(_handleMessage);
-  }
+  final _captureStatusesController =
+      StreamController<Map<String, CaptureSyncStatus>>();
+  final _syncAvailabilityController = StreamController<bool>();
+
+  CapturesController._();
+
+  StreamSink<Map<String, CaptureSyncStatus>> get captureStatuses =>
+      _captureStatusesController.sink;
+  StreamSink<bool> get syncAvailability => _syncAvailabilityController.sink;
 
   @override
   void onAttach() {
+    _captureStatusesController.stream.listen(_updateCaptureStatuses);
+    _syncAvailabilityController.stream.listen(_updateSyncAvailability);
+
     element.appendHtml(injectedHtml.text,
         treeSanitizer: NodeTreeSanitizer.trusted);
 
@@ -66,6 +73,14 @@ class InjectController extends Controller<BodyElement> {
   @override
   void onDetach() {
     _observer.disconnect();
+    _captureStatusesController.close();
+    _syncAvailabilityController.close();
+
+    for (var child in element.querySelectorAll('.stratos-injected')) {
+      var controller = Controller.ofElement(child);
+      controller?.detach();
+      child.remove();
+    }
   }
 
   /// Takes any sync availability update messages and notifies the user if
@@ -189,11 +204,5 @@ class InjectController extends Controller<BodyElement> {
     }
 
     _updateHeader(hintOneInProgress: atLeastOneInProgress);
-  }
-
-  void _handleMessage(HostToClientMessage message) {
-    message.when(
-        updateCaptureStatuses: _updateCaptureStatuses,
-        syncAvailability: _updateSyncAvailability);
   }
 }

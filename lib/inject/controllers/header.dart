@@ -8,7 +8,7 @@ import 'package:stratos/drizzle/utils.dart';
 import 'package:stratos/cancellable_pipe.dart';
 import 'package:stratos/message.dart';
 
-import 'inject.dart';
+import 'page.dart';
 import 'status_icon.dart';
 
 class CaptureStatusCheckProgress {
@@ -95,9 +95,9 @@ class HeaderController extends TemplateController {
   }
 
   void _requestAuth(Element target, Event event) {
-    var inject =
-        findParentByName<InjectController>(InjectController.factoryName);
-    inject.pipe.outgoing.add(ClientToHostMessage.requestAuth());
+    var controller =
+        findParentByName<PageController>(PageController.factoryName);
+    controller.pipe.outgoing.add(ClientToHostMessage.requestAuth());
     event.preventDefault();
   }
 

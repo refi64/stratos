@@ -9,7 +9,7 @@ import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:stratos/drizzle/template.dart';
 import 'package:stratos/drizzle/utils.dart';
-import 'package:stratos/inject/controllers/inject.dart';
+import 'package:stratos/inject/controllers/page.dart';
 import 'package:stratos/message.dart';
 
 /// A Drizzle controller that is potentially attached to an individual capture
@@ -103,9 +103,9 @@ class StatusIconController extends TemplateController {
     } else {
       statuses.add(SyncStatus.inProgress());
 
-      var inject =
-          findParentByName<InjectController>(InjectController.factoryName);
-      inject.pipe.outgoing.add(id == idSyncAll
+      var controller =
+          findParentByName<PageController>(PageController.factoryName);
+      controller.pipe.outgoing.add(id == idSyncAll
           ? ClientToHostMessage.requestSyncAll()
           : ClientToHostMessage.requestSync(id));
     }

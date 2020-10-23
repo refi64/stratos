@@ -25,7 +25,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://stadia.google.com/captures"
+        "https://stadia.google.com/*"
       ],
       "js": [
         "content_script.dart.js"
