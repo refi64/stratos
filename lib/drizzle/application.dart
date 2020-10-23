@@ -49,7 +49,7 @@ class Application {
 
   /// Detaches the controller from the given element, if one is set.
   static void detach(Element element) {
-    if (hasProperty(element, DZ_CONTROLLER_PROPERTY)) {
+    if (getProperty(element, DZ_CONTROLLER_PROPERTY) != null) {
       var controller = Controller.ofElement(element);
       setProperty(element, DZ_CONTROLLER_PROPERTY, null);
       controller.detach();
