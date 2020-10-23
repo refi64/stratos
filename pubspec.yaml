@@ -4,8 +4,8 @@
 
 name: stratos
 description: Upload your Stadia captures to Google Drive
-version: 0.1.0
-# homepage: https://www.example.com
+version: 0.2.0
+homepage: https://stratos.refi64.com/
 
 environment:
   sdk: '>=2.10.0 <3.0.0'

@@ -5,7 +5,7 @@
 //!merge:manifest.local.json
 {
   "name": "Stratos",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Sync your Stadia captures to Google Drive",
   "manifest_version": 2,
   "background": {
