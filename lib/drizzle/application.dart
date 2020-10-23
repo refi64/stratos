@@ -69,7 +69,10 @@ class Application {
     // Attach the controllers.
     for (var element in _findWithAttribute(root, DZ_CONTROLLER)) {
       var name = element.getAttribute(DZ_CONTROLLER);
-      var controller = context.find(name).create();
+      var controller = context.find(name)?.create();
+      if (controller == null) {
+        throw ArgumentError.value(name, DZ_CONTROLLER);
+      }
 
       detach(element);
       controller.attach(element);
