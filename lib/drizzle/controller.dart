@@ -7,6 +7,7 @@ import 'dart:html';
 import 'package:js/js_util.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'application.dart';
 import 'attributes.dart';
 
 /// The type of a controller action.
@@ -101,4 +102,10 @@ class ControllerFactory<C extends Controller> {
 
   /// Creates the controller.
   Controller create() => _factoryFunction();
+
+  void instantiate(Element target) {
+    target.setAttribute(DZ_CONTROLLER, name);
+    var context = Context.from(Application.context)..register(this);
+    Application.attach(target, context);
+  }
 }

@@ -51,10 +51,9 @@ abstract class TemplateController<E extends Element> extends Controller<E> {
     var controllerName =
         element.getAttribute(DZ_TEMPLATE_CONTROLLER) ?? template;
     clone.setAttribute(DZ_CONTROLLER, controllerName);
-    var context = Context.from(Application.context)
-      ..register(ControllerFactory(controllerName, () => this));
+    var zFactory = ControllerFactory(controllerName, () => this);
 
     inserter(clone);
-    Application.attach(clone, context);
+    zFactory.instantiate(clone);
   }
 }
