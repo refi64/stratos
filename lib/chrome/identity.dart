@@ -60,12 +60,13 @@ external void _removeCachedAuthToken(
 Future<AuthTokenResult> getAuthToken({bool interactive, List<String> scopes}) {
   final completer = Completer<AuthTokenResult>();
   _getAuthToken(_AuthTokenOptions(interactive: interactive, scopes: scopes),
-      allowInterop(([String token, List<String> scopes]) {
+      allowInterop(([String token, List scopes]) {
     if (token == null && chrome_runtime.lastError != null) {
       completer.completeError(AuthTokenError(chrome_runtime.lastError.message));
     } else {
-      completer.complete(
-          token != null ? AuthTokenResult(token: token, scopes: scopes) : null);
+      completer.complete(token != null
+          ? AuthTokenResult(token: token, scopes: scopes.cast<String>())
+          : null);
     }
   }));
   return completer.future;
