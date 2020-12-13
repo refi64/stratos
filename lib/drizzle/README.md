@@ -170,13 +170,14 @@ updated. As a slightly more elegant alternative, content subjects are available:
 <body>
   <div dz-controller="app">
     <button dz-actions="click:app:click">Click me!</button>
-    <span dz-content="app:textOutput"></span>
+    <span dz-content="$text:app:textOutput"></span>
   </div>
 </body>
 ```
 
 This attaches the app controller's `textOutput` content subject to the span's
-`innerText`. Now, the controller can be updated as such:
+`innerText` (that's what the `$text` means). Now, the controller can be updated
+as such:
 
 ```dart
 class AppController extends Controller {
@@ -228,7 +229,7 @@ example of an alternative way of creating our app controller:
 <template dz-template="app">
   <div>
     <button dz-actions="click:app:click">Click me!</button>
-    <span dz-content="app:textOutput"></span>
+    <span dz-content="$text:app:textOutput"></span>
   </div>
 </template>
 ```

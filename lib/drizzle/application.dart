@@ -35,6 +35,34 @@ List<Element> _findWithAttribute(Element root, String attr) => [
       ...root.querySelectorAll('[$attr]'),
     ];
 
+/// A single item formatted as target:controller:value, which may appear in a
+/// semicolon-separated line in attributes like dz-actions.
+class Spec {
+  final String target;
+  final String controller;
+  final String value;
+
+  Spec({this.target, this.controller, this.value});
+
+  static List<Spec> parseLine(String line, String argument) =>
+      line.split(';').map((s) => parse(s, argument)).toList();
+
+  static Spec parse(String spec, String argument) {
+    var parts = spec.split(':');
+    if (parts.length != 2 && parts.length != 3) {
+      throw ArgumentError.value(spec, argument);
+    }
+
+    return Spec(
+        target: parts[0],
+        controller: parts[1],
+        value: parts.length == 3 ? parts[2] : parts[0]);
+  }
+
+  @override
+  String toString() => '$target:$controller:$value';
+}
+
 /// The centralized "singleton" used to register and attach controllers.
 class Application {
   Application._();
@@ -83,35 +111,26 @@ class Application {
 
     // Attach the attributes.
     for (var element in _findWithAttribute(root, DZ_ACTIONS)) {
-      var actions = element.getAttribute(DZ_ACTIONS).split(';');
-      for (var spec in actions) {
-        var parts = spec.split(':');
-        if (parts.length != 2 && parts.length != 3) {
-          throw ArgumentError.value(spec, DZ_ACTIONS);
-        }
-
-        var eventName = parts[0];
-        var controllerName = parts[1];
-        var actionName = parts.length == 3 ? parts[2] : eventName;
-
-        var controller = findParentControllerByName(element, controllerName);
+      var actions = element.getAttribute(DZ_ACTIONS);
+      for (var spec in Spec.parseLine(actions, DZ_ACTIONS)) {
+        var controller = findParentControllerByName(element, spec.controller);
         if (controller == null) {
           throw ArgumentError.value(spec, DZ_ACTIONS);
         }
 
-        var action = controller.actions[actionName];
+        var action = controller.actions[spec.value];
         if (action == null) {
           throw ArgumentError.value(spec, DZ_ACTIONS);
         }
 
         // XXX: What if the action throws an error? This needs better handling.
-        if (actionName == 'attach') {
+        if (spec.value == 'attach') {
           action(element, null);
         } else {
           element.addEventListener(
-              eventName,
+              spec.target,
               (event) => mainWrapper(() => handleErrorsMaybeAsync(
-                  'Running listener for $eventName',
+                  'Running listener for ${spec.target}',
                   () => action(element, event))));
         }
       }
@@ -119,38 +138,23 @@ class Application {
 
     // XXX: This is very similar to the actions code above.
     for (var element in _findWithAttribute(root, DZ_CONTENT)) {
-      var targets = element.getAttribute(DZ_CONTENT).split(';');
-      for (var spec in targets) {
-        var parts = spec.split(':');
-        if (parts.length != 2 && parts.length != 3) {
-          throw ArgumentError.value(spec, DZ_CONTENT);
-        }
-
-        String target, controllerName, subjectName;
-        if (parts.length == 3) {
-          target = parts[0];
-          controllerName = parts[1];
-          subjectName = parts[2];
-        } else {
-          controllerName = parts[0];
-          subjectName = parts[1];
-        }
-
-        var controller = findParentControllerByName(element, controllerName);
+      var targets = element.getAttribute(DZ_CONTENT);
+      for (var spec in Spec.parseLine(targets, DZ_CONTENT)) {
+        var controller = findParentControllerByName(element, spec.controller);
         if (controller == null) {
           throw ArgumentError.value(spec, DZ_CONTENT);
         }
 
-        var subject = controller.contentSubjects[subjectName];
+        var subject = controller.contentSubjects[spec.value];
         if (subject == null) {
           throw ArgumentError.value(spec, DZ_CONTENT);
         }
 
         subject.listen((value) {
-          if (target == null) {
+          if (spec.target == r'$text') {
             element.innerText = value;
           } else {
-            element.setAttribute(target, value);
+            element.setAttribute(spec.target, value);
           }
         });
       }
