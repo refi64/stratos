@@ -138,6 +138,14 @@ Note that *all* controllers are attached (and thus, their `onAttach` methods
 are called) before any actions are. If you want to invoke a controller method
 *after* actions are attached, override `void onReady()`.
 
+One more important note: in addition to listening for an event with the proper
+name like `click`, it also listens to a custom event `drizzle:EVENT_NAME`, e.g.
+`drizzle:click`. This can be used to forward events of the original type without
+invoking any other event handlers; in particular, it's utilized to "stael" click
+events from being handled by the Wiz framework used with Stadia and instead
+giving them to Drizzle. It is expected that the `CustomEvent` instances passed
+to this have their `detail` set to the original, forwarded event.
+
 ### The `attach` action
 
 A special, synthesized DOM event is available called "attach", which is invoked

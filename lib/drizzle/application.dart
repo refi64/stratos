@@ -127,11 +127,13 @@ class Application {
         if (spec.value == 'attach') {
           action(element, null);
         } else {
-          element.addEventListener(
-              spec.target,
-              (event) => mainWrapper(() => handleErrorsMaybeAsync(
-                  'Running listener for ${spec.target}',
-                  () => action(element, event))));
+          var listener = (Event event) => mainWrapper(() =>
+              handleErrorsMaybeAsync('Running listener for ${spec.target}',
+                  () => action(element, event)));
+
+          element.addEventListener(spec.target, listener);
+          element.addEventListener('drizzle:${spec.target}',
+              (event) => listener((event as CustomEvent).detail as Event));
         }
       }
     }
